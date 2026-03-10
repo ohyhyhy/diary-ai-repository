@@ -1,0 +1,113 @@
+.drawing-canvas-wrap {
+  border: 1.5px solid var(--tan);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #FFFDF8;
+}
+
+.drawing-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--warm-white);
+  border-bottom: 1px solid var(--tan);
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-group + .toolbar-group {
+  padding-left: 12px;
+  border-left: 1px solid var(--tan);
+}
+
+.tool-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tool-btn:hover { background: var(--parchment); }
+.tool-btn.active {
+  background: var(--parchment);
+  border-color: var(--brown-light);
+}
+
+.color-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.color-btn:hover { transform: scale(1.2); }
+.color-btn.active {
+  transform: scale(1.25);
+  box-shadow: 0 0 0 2.5px var(--brown);
+}
+
+.size-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.size-btn:hover { background: var(--parchment); }
+.size-btn.active {
+  background: var(--parchment);
+  border-color: var(--brown-light);
+}
+
+.toolbar-actions { margin-left: auto; }
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--tan);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--ink-faded);
+}
+
+.action-btn:hover:not(:disabled) { background: var(--parchment); color: var(--ink); }
+.action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.drawing-canvas {
+  display: block;
+  width: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.drawing-canvas.eraser-cursor {
+  cursor: cell;
+}

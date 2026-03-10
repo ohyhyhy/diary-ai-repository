@@ -1,0 +1,29 @@
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+}
+
+.app-loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink-faded);
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.app-loading-icon {
+  font-size: 28px;
+  color: var(--brown);
+  animation: pulse 1.5s ease-in-out infinite;
+}
