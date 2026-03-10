@@ -1,34 +1,83 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DiaryContext } from '../App';
-import { format, parseISO } from 'date-fns';
+import {
+  format, parseISO, startOfMonth, endOfMonth,
+  eachDayOfInterval, isToday, addMonths, subMonths,
+} from 'date-fns';
 import { ko } from 'date-fns/locale';
 import './DiaryHome.css';
 
 const MOOD_MAP = {
-  happy: { emoji: '😊', label: '행복', color: '#F4C842' },
-  sad: { emoji: '😢', label: '슬픔', color: '#7A9BB5' },
-  angry: { emoji: '😤', label: '화남', color: '#D4857A' },
-  calm: { emoji: '😌', label: '평온', color: '#8FAF8A' },
-  excited: { emoji: '🎉', label: '설렘', color: '#C9A87C' },
-  tired: { emoji: '😴', label: '피곤', color: '#B5A0C4' },
+  happy:   { emoji: '😊', label: '행복' },
+  sad:     { emoji: '😢', label: '슬픔' },
+  angry:   { emoji: '😤', label: '화남' },
+  calm:    { emoji: '😌', label: '평온' },
+  excited: { emoji: '🎉', label: '설렘' },
+  tired:   { emoji: '😴', label: '피곤' },
 };
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+function Calendar({ entries, selectedDate, onSelectDate, currentMonth, onMonthChange }) {
+  const start = startOfMonth(currentMonth);
+  const end = endOfMonth(currentMonth);
+  const days = eachDayOfInterval({ start, end });
+  const startPad = start.getDay();
+  const entryDates = new Set(entries.map(e => e.date));
+
+  return (
+    <div className="calendar">
+      <div className="cal-header">
+        <button className="cal-nav" onClick={() => onMonthChange(subMonths(currentMonth, 1))}>‹</button>
+        <span className="cal-title">{format(currentMonth, 'yyyy년 M월', { locale: ko })}</span>
+        <button className="cal-nav" onClick={() => onMonthChange(addMonths(currentMonth, 1))}>›</button>
+      </div>
+      <div className="cal-weekdays">
+        {WEEKDAYS.map(d => <span key={d} className="cal-weekday">{d}</span>)}
+      </div>
+      <div className="cal-grid">
+        {Array.from({ length: startPad }).map((_, i) => (
+          <div key={`pad-${i}`} className="cal-day empty" />
+        ))}
+        {days.map(day => {
+          const dateStr = format(day, 'yyyy-MM-dd');
+          const hasEntry = entryDates.has(dateStr);
+          const isSelected = selectedDate === dateStr;
+          const isTodayDate = isToday(day);
+          const entry = entries.find(e => e.date === dateStr);
+          return (
+            <button
+              key={dateStr}
+              className={`cal-day${hasEntry ? ' has-entry' : ''}${isSelected ? ' selected' : ''}${isTodayDate ? ' today' : ''}`}
+              onClick={() => onSelectDate(dateStr, entry)}
+            >
+              <span className="cal-day-num">{format(day, 'd')}</span>
+              {hasEntry && <span className="cal-dot">{MOOD_MAP[entry?.mood]?.emoji || '·'}</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function DiaryHome() {
   const { entries, deleteEntry } = useContext(DiaryContext);
   const navigate = useNavigate();
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  const handleNewEntry = () => {
-    navigate(`/write/${today}`);
+  const handleSelectDate = (dateStr, entry) => {
+    setSelectedDate(dateStr);
+    setSelectedEntry(entry || null);
   };
 
-  const handleEntryClick = (entry) => {
-    setSelectedEntry(entry);
-  };
+  const handleNewEntry = () => navigate(`/write/${today}`);
 
   const handleEdit = (entry) => {
     navigate(`/write/${entry.date}`);
@@ -39,81 +88,73 @@ export default function DiaryHome() {
     deleteEntry(date);
     setConfirmDelete(null);
     setSelectedEntry(null);
+    setSelectedDate(null);
   };
 
   const formatDate = (dateStr) => {
-    try {
-      return format(parseISO(dateStr), 'yyyy년 M월 d일 EEEE', { locale: ko });
-    } catch {
-      return dateStr;
-    }
+    try { return format(parseISO(dateStr), 'yyyy년 M월 d일 EEEE', { locale: ko }); }
+    catch { return dateStr; }
   };
 
-  const formatShortDate = (dateStr) => {
-    try {
-      const d = parseISO(dateStr);
-      return {
-        month: format(d, 'M월'),
-        day: format(d, 'd'),
-        weekday: format(d, 'EEE', { locale: ko }),
-      };
-    } catch {
-      return { month: '', day: dateStr, weekday: '' };
-    }
-  };
+  const monthEntries = entries.filter(e =>
+    e.date.startsWith(format(currentMonth, 'yyyy-MM'))
+  );
 
   return (
     <div className="home-container">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="diary-logo">
             <span className="logo-icon">✦</span>
             <h1 className="logo-text">나의 일기장</h1>
           </div>
-          <p className="logo-sub">{format(new Date(), 'yyyy년 M월', { locale: ko })}</p>
         </div>
 
         <div className="sidebar-actions">
           <button className="btn-new-entry" onClick={handleNewEntry}>
-            <span className="btn-icon">+</span>
-            새 일기 쓰기
+            <span className="btn-icon">+</span>새 일기 쓰기
           </button>
           <button className="btn-chat" onClick={() => navigate('/chat')}>
-            <span className="btn-icon">💬</span>
-            AI와 대화하기
+            <span className="btn-icon">💬</span>AI와 대화하기
           </button>
         </div>
 
+        <Calendar
+          entries={entries}
+          selectedDate={selectedDate}
+          onSelectDate={handleSelectDate}
+          currentMonth={currentMonth}
+          onMonthChange={setCurrentMonth}
+        />
+
         <div className="entry-count">
-          <span>{entries.length}개의 기록</span>
+          <span>이번 달 {monthEntries.length}개 · 전체 {entries.length}개</span>
         </div>
 
         <nav className="entry-list">
-          {entries.length === 0 ? (
+          {monthEntries.length === 0 ? (
             <div className="empty-list">
-              <p>아직 일기가 없어요</p>
+              <p>이번 달 일기가 없어요</p>
               <p className="empty-sub">첫 번째 일기를 써보세요 ✍️</p>
             </div>
           ) : (
-            entries.map((entry) => {
-              const { month, day, weekday } = formatShortDate(entry.date);
+            monthEntries.map((entry) => {
               const mood = MOOD_MAP[entry.mood];
               return (
                 <div
                   key={entry.date}
-                  className={`entry-item ${selectedEntry?.date === entry.date ? 'active' : ''}`}
-                  onClick={() => handleEntryClick(entry)}
+                  className={`entry-item${selectedEntry?.date === entry.date ? ' active' : ''}`}
+                  onClick={() => handleSelectDate(entry.date, entry)}
                 >
                   <div className="entry-date-badge">
-                    <span className="badge-month">{month}</span>
-                    <span className="badge-day">{day}</span>
-                    <span className="badge-weekday">{weekday}</span>
+                    <span className="badge-month">{format(parseISO(entry.date), 'M월')}</span>
+                    <span className="badge-day">{format(parseISO(entry.date), 'd')}</span>
+                    <span className="badge-weekday">{format(parseISO(entry.date), 'EEE', { locale: ko })}</span>
                   </div>
                   <div className="entry-preview">
                     <div className="entry-title-row">
                       <span className="entry-title">{entry.title || '제목 없음'}</span>
-                      {mood && <span className="entry-mood-emoji" title={mood.label}>{mood.emoji}</span>}
+                      {mood && <span className="entry-mood-emoji">{mood.emoji}</span>}
                     </div>
                     <p className="entry-snippet">
                       {entry.content?.slice(0, 40)}{entry.content?.length > 40 ? '...' : ''}
@@ -126,7 +167,6 @@ export default function DiaryHome() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
         {selectedEntry ? (
           <div className="entry-detail" key={selectedEntry.date} style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -144,11 +184,7 @@ export default function DiaryHome() {
                 <button className="btn-delete" onClick={() => setConfirmDelete(selectedEntry.date)}>삭제</button>
               </div>
             </div>
-
-            {selectedEntry.title && (
-              <h2 className="detail-title">{selectedEntry.title}</h2>
-            )}
-
+            {selectedEntry.title && <h2 className="detail-title">{selectedEntry.title}</h2>}
             {selectedEntry.weather && (
               <p className="detail-weather">
                 {selectedEntry.weather === 'sunny' && '☀️ 맑음'}
@@ -158,13 +194,11 @@ export default function DiaryHome() {
                 {selectedEntry.weather === 'windy' && '💨 바람'}
               </p>
             )}
-
             <div className="detail-content">
               {selectedEntry.content?.split('\n').map((line, i) => (
                 <p key={i}>{line || <br />}</p>
               ))}
             </div>
-
             {selectedEntry.tags?.length > 0 && (
               <div className="detail-tags">
                 {selectedEntry.tags.map(tag => (
@@ -173,20 +207,23 @@ export default function DiaryHome() {
               </div>
             )}
           </div>
+        ) : selectedDate ? (
+          <div className="welcome-screen">
+            <div style={{ fontSize: 52, marginBottom: 16 }}>📝</div>
+            <h2 className="welcome-title">{formatDate(selectedDate)}</h2>
+            <p className="welcome-sub">이 날의 일기가 없어요.<br />지금 써볼까요?</p>
+            <button className="btn-welcome-start" onClick={() => navigate(`/write/${selectedDate}`)}>
+              이 날 일기 쓰기 →
+            </button>
+          </div>
         ) : (
           <div className="welcome-screen">
-            <div className="welcome-illustration">
-              <div className="book-icon">📖</div>
-            </div>
+            <div style={{ fontSize: 64, marginBottom: 20 }}>📖</div>
             <h2 className="welcome-title">오늘의 이야기를 기록해보세요</h2>
-            <p className="welcome-sub">
-              일기는 당신의 소중한 기억을 담는 공간이에요.<br />
-              왼쪽 목록에서 일기를 선택하거나, 새 일기를 써보세요.
-            </p>
+            <p className="welcome-sub">달력에서 날짜를 선택하거나,<br />새 일기를 써보세요.</p>
             <button className="btn-welcome-start" onClick={handleNewEntry}>
               오늘 일기 쓰기 →
             </button>
-
             {entries.length > 0 && (
               <div className="stats-row">
                 <div className="stat-card">
@@ -194,15 +231,11 @@ export default function DiaryHome() {
                   <span className="stat-label">총 일기</span>
                 </div>
                 <div className="stat-card">
-                  <span className="stat-num">
-                    {entries.filter(e => e.date.startsWith(format(new Date(), 'yyyy-MM'))).length}
-                  </span>
+                  <span className="stat-num">{monthEntries.length}</span>
                   <span className="stat-label">이번 달</span>
                 </div>
                 <div className="stat-card">
-                  <span className="stat-num">
-                    {[...new Set(entries.map(e => e.mood).filter(Boolean))].length}
-                  </span>
+                  <span className="stat-num">{[...new Set(entries.map(e => e.mood).filter(Boolean))].length}</span>
                   <span className="stat-label">감정 종류</span>
                 </div>
               </div>
@@ -211,7 +244,6 @@ export default function DiaryHome() {
         )}
       </main>
 
-      {/* Confirm Delete Modal */}
       {confirmDelete && (
         <div className="modal-overlay" onClick={() => setConfirmDelete(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>

@@ -105,6 +105,121 @@
   font-size: 16px;
 }
 
+/* ── Calendar ── */
+.calendar {
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid var(--tan);
+}
+
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cal-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--font-serif);
+}
+
+.cal-nav {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  font-size: 16px;
+  color: var(--ink-faded);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+
+.cal-nav:hover {
+  background: var(--parchment);
+  color: var(--brown-dark);
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 10px;
+  color: var(--ink-faded);
+  padding: 2px 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  background: transparent;
+  transition: all 0.15s;
+  padding: 2px 0;
+  min-height: 32px;
+}
+
+.cal-day.empty {
+  cursor: default;
+  background: transparent;
+}
+
+.cal-day:not(.empty):hover {
+  background: var(--parchment);
+}
+
+.cal-day.today .cal-day-num {
+  color: var(--brown);
+  font-weight: 700;
+}
+
+.cal-day.has-entry {
+  background: var(--parchment);
+}
+
+.cal-day.selected {
+  background: var(--brown-dark) !important;
+  border-color: var(--brown-dark);
+}
+
+.cal-day.selected .cal-day-num {
+  color: var(--warm-white) !important;
+}
+
+.cal-day-num {
+  font-size: 11px;
+  color: var(--ink-soft);
+  line-height: 1;
+}
+
+.cal-dot {
+  font-size: 10px;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.cal-day.selected .cal-dot {
+  filter: brightness(10);
+}
+
 .entry-count {
   padding: 8px 24px;
   font-size: 12px;
