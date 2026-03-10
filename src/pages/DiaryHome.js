@@ -117,6 +117,9 @@ export default function DiaryHome() {
           <button className="btn-chat" onClick={() => navigate('/chat')}>
             <span className="btn-icon">💬</span>AI와 대화하기
           </button>
+          <button className="btn-emotion" onClick={() => navigate('/emotion')}>
+            <span className="btn-icon">📊</span>감정 분석
+          </button>
         </div>
 
         <Calendar
@@ -199,6 +202,16 @@ export default function DiaryHome() {
                 <p key={i}>{line || <br />}</p>
               ))}
             </div>
+            {selectedEntry.drawing_url && (
+              <div className="detail-drawing">
+                <p className="detail-drawing-label">🎨 그림일기</p>
+                <img
+                  src={selectedEntry.drawing_url}
+                  alt="그림일기"
+                  className="detail-drawing-img"
+                />
+              </div>
+            )}
             {selectedEntry.tags?.length > 0 && (
               <div className="detail-tags">
                 {selectedEntry.tags.map(tag => (

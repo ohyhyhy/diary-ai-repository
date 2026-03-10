@@ -101,8 +101,26 @@
   transform: translateY(-1px);
 }
 
-.btn-icon {
-  font-size: 16px;
+.btn-emotion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--brown-dark);
+  border: 1.5px solid var(--tan);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+
+.btn-emotion:hover {
+  background: var(--parchment);
+  border-color: var(--brown-light);
+  transform: translateY(-1px);
 }
 
 /* ── Calendar ── */
@@ -429,8 +447,26 @@
   margin-bottom: 4px;
 }
 
+.detail-drawing {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--tan);
+}
+
+.detail-drawing-label {
+  font-size: 13px;
+  color: var(--ink-faded);
+  margin-bottom: 12px;
+}
+
+.detail-drawing-img {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--tan);
+  display: block;
+}
 .detail-tags {
-  display: flex;
+    display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 28px;

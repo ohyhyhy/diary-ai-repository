@@ -302,9 +302,68 @@
   color: var(--tan);
 }
 
-.word-count {
-  font-size: 12px;
+/* Tabs */
+.write-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1.5px solid var(--tan);
+  padding-bottom: 0;
+}
+
+.write-tab {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-family: var(--font-body);
   color: var(--ink-faded);
-  white-space: nowrap;
-  padding-top: 4px;
+  border-radius: 8px 8px 0 0;
+  border: 1.5px solid transparent;
+  border-bottom: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  margin-bottom: -1.5px;
+}
+
+.write-tab:hover { background: var(--parchment); color: var(--ink); }
+
+.write-tab.active {
+  background: var(--cream);
+  color: var(--ink);
+  border-color: var(--tan);
+  border-bottom-color: var(--cream);
+  font-weight: 500;
+}
+
+.tab-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--brown);
+  border-radius: 50%;
+}
+
+/* Draw Tab */
+.draw-tab-content {
+  animation: fadeIn 0.3s ease;
+}
+
+.draw-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-faded);
+  margin-top: 10px;
+}
+
+/* Editor footer fix */
+.editor-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tan);
+  gap: 12px;
 }

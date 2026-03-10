@@ -1,6 +1,7 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DiaryContext } from '../App';
+import { supabase } from '../SupabaseClient';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import './DiaryChat.css';
@@ -41,17 +42,6 @@ const SUGGESTED_QUESTIONS = [
   '내가 가장 행복했던 날은 언제야?',
 ];
 
-const STORAGE_KEY = 'diary-chat-sessions';
-
-function loadSessions() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
-}
-
-function saveSessions(sessions) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-}
-
 export default function DiaryChat() {
   const { entries } = useContext(DiaryContext);
   const navigate = useNavigate();
@@ -63,7 +53,7 @@ export default function DiaryChat() {
       : '안녕하세요! 😊 아직 일기가 없네요. 일기를 쓰고 나면 그 내용을 바탕으로 대화할 수 있어요. 먼저 일기를 써보세요!',
   };
 
-  const [sessions, setSessions] = useState(loadSessions);
+  const [sessions, setSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [messages, setMessages] = useState([initMessage]);
   const [input, setInput] = useState('');
@@ -72,6 +62,28 @@ export default function DiaryChat() {
   const [showHistory, setShowHistory] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // 세션 목록 불러오기
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const fetchSessions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setSessions(data || []);
+    } catch {
+      // 폴백: localStorage
+      try {
+        const saved = localStorage.getItem('diary-chat-sessions');
+        setSessions(saved ? JSON.parse(saved) : []);
+      } catch {}
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -132,25 +144,35 @@ export default function DiaryChat() {
   };
 
   // 대화 저장
-  const handleSave = () => {
-    const realMessages = messages.filter(m => !(messages.indexOf(m) === 0 && m.role === 'assistant'));
-    if (realMessages.length === 0) return;
-
+  const handleSave = async () => {
+    if (messages.length <= 1) return;
     const now = new Date();
+    const sessionId = currentSessionId || Date.now().toString();
     const session = {
-      id: currentSessionId || Date.now().toString(),
+      id: sessionId,
       title: messages.find(m => m.role === 'user')?.content?.slice(0, 30) || '대화',
       date: format(now, 'yyyy-MM-dd HH:mm'),
       messages,
     };
 
+    try {
+      const { error } = await supabase
+        .from('chat_sessions')
+        .upsert(session, { onConflict: 'id' });
+      if (error) throw error;
+    } catch {
+      // 폴백: localStorage
+      const saved = sessions.find(s => s.id === sessionId)
+        ? sessions.map(s => s.id === sessionId ? session : s)
+        : [session, ...sessions];
+      localStorage.setItem('diary-chat-sessions', JSON.stringify(saved));
+    }
+
     const updated = currentSessionId
       ? sessions.map(s => s.id === currentSessionId ? session : s)
       : [session, ...sessions];
-
     setSessions(updated);
-    saveSessions(updated);
-    setCurrentSessionId(session.id);
+    setCurrentSessionId(sessionId);
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2000);
   };
@@ -172,11 +194,13 @@ export default function DiaryChat() {
   };
 
   // 대화 삭제
-  const handleDeleteSession = (id, e) => {
+  const handleDeleteSession = async (id, e) => {
     e.stopPropagation();
+    try {
+      await supabase.from('chat_sessions').delete().eq('id', id);
+    } catch {}
     const updated = sessions.filter(s => s.id !== id);
     setSessions(updated);
-    saveSessions(updated);
     if (currentSessionId === id) {
       setMessages([initMessage]);
       setCurrentSessionId(null);
